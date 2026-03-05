@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROBO PALS — A Story About Robots!</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a2e;
+    --bg: #fdfcf7;
+    --yellow: #ffd94a;
+    --pink: #ff6b9d;
+    --blue: #4cc9f0;
+    --green: #6bcb77;
+    --orange: #ff9f43;
+    --purple: #a855f7;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Architects Daughter', cursive;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    cursor: default;
+    user-select: none;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* SLIDE CONTAINER */
+  .book {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    /* CONSISTENT animation: always slide left/right only */
+    transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.55s ease;
+    will-change: transform;
+  }
+
+  .slide.active        { transform: translateX(0);     opacity: 1; z-index: 10; }
+  .slide.exit-left     { transform: translateX(-110%); opacity: 0; z-index: 5;  }
+  .slide.exit-right    { transform: translateX(110%);  opacity: 0; z-index: 5;  }
+  .slide.enter-right   { transform: translateX(110%);  opacity: 0; z-index: 8;  }
+  .slide.enter-left    { transform: translateX(-110%); opacity: 0; z-index: 8;  }
+  .slide.hidden        { display: none; }
+
+  /* CONTENT CARD */
+  .card {
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    max-width: 780px;
+    width: 100%;
+    padding: 26px 34px 20px;
+    position: relative;
+    box-shadow: 6px 6px 0px var(--ink);
+  }
+
+  .drawing { display: block; margin: 0 auto 10px; }
+
+  .big-title {
+    font-family: 'Caveat', cursive;
+    font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    color: #555;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .body-text {
+    font-size: clamp(0.92rem, 2.1vw, 1.15rem);
+    color: var(--ink);
+    line-height: 1.65;
+    text-align: center;
+  }
+
+  .highlight { background: var(--yellow); padding: 2px 6px; border-radius: 6px; font-weight: 700; }
+  .highlight.pink   { background: #ffd6e7; }
+  .highlight.blue   { background: #caf0fb; }
+  .highlight.green  { background: #d4f5d8; }
+  .highlight.orange { background: #ffe4c4; }
+  .highlight.purple { background: #ecdcfe; }
+
+  .squiggle { text-decoration: none; position: relative; }
+  .squiggle::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -4px;
+    width: 100%; height: 6px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 6'%3E%3Cpath d='M0 3 Q7.5 0 15 3 Q22.5 6 30 3 Q37.5 0 45 3 Q52.5 6 60 3' stroke='%23ff6b9d' stroke-width='2.5' fill='none'/%3E%3C/svg%3E") repeat-x center;
+    background-size: 60px 6px;
+  }
+
+  .label-box {
+    display: inline-block;
+    background: var(--yellow);
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 0.85rem;
+    margin: 2px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .label-box.pink   { background: #ffd6e7; }
+  .label-box.blue   { background: #caf0fb; }
+  .label-box.green  { background: #d4f5d8; }
+  .label-box.orange { background: #ffe4c4; }
+
+  .fact-box {
+    background: #fff8e1;
+    border: 2.5px dashed var(--ink);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-top: 12px;
+    font-size: clamp(0.82rem, 1.9vw, 0.98rem);
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .card.yellow-accent { border-color: var(--yellow); box-shadow: 6px 6px 0px #f0c000; }
+  .card.pink-accent   { border-color: var(--pink);   box-shadow: 6px 6px 0px #d4407a; }
+  .card.blue-accent   { border-color: var(--blue);   box-shadow: 6px 6px 0px #2a9dc4; }
+  .card.green-accent  { border-color: var(--green);  box-shadow: 6px 6px 0px #3a9b44; }
+  .card.orange-accent { border-color: var(--orange); box-shadow: 6px 6px 0px #d4762e; }
+  .card.purple-accent { border-color: var(--purple); box-shadow: 6px 6px 0px #7c22cc; }
+
+  /* NAV BUTTONS */
+  .nav {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    z-index: 999;
+  }
+
+  .nav-btn {
+    font-family: 'Caveat', cursive;
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 50px;
+    padding: 9px 26px;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform 0.1s, box-shadow 0.1s;
+    color: var(--ink);
+  }
+  .nav-btn:hover  { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
+  .nav-btn:active { transform: translate(2px,2px);   box-shadow: 2px 2px 0 var(--ink); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: 4px 4px 0 var(--ink); }
+
+  .page-indicator {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    color: var(--ink);
+    min-width: 70px;
+    text-align: center;
+    background: var(--yellow);
+    border: 2.5px solid var(--ink);
+    border-radius: 50px;
+    padding: 7px 12px;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  /* PROGRESS DOTS */
+  .dots {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 999;
+  }
+  .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2.5px solid var(--ink);
+    background: transparent;
+    transition: background 0.3s, transform 0.3s;
+    cursor: pointer;
+  }
+  .dot.active { background: var(--ink); transform: scale(1.3); }
+
+  /* ── POINTS SYSTEM ── */
+  .points-display {
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    z-index: 999;
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 50px;
+    padding: 7px 16px;
+    box-shadow: 4px 4px 0 var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Caveat', cursive;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .points-star { font-size: 1.3rem; }
+  #pointsValue { transition: transform 0.2s; }
+  #pointsValue.pop { transform: scale(1.5); color: var(--pink); }
+
+  /* Points float animation */
+  .point-float {
+    position: fixed;
+    font-family: 'Caveat', cursive;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--pink);
+    pointer-events: none;
+    z-index: 9999;
+    animation: floatUp 1.2s ease-out forwards;
+  }
+  @keyframes floatUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
+  }
+
+  /* ── LANGUAGE SELECTOR ── */
+  .lang-btn {
+    position: fixed;
+    top: 16px;
+    left: 20px;
+    z-index: 999;
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 50px;
+    padding: 6px 12px;
+    box-shadow: 3px 3px 0 var(--ink);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .lang-opt {
+    font-family: 'Caveat', cursive;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    color: var(--ink);
+    background: none;
+  }
+  .lang-opt.active { background: var(--yellow); border-color: var(--ink); }
+  .lang-opt:hover:not(.active) { background: #f0f0f0; }
+
+  /* RTL for arabic */
+  body.rtl .card, body.rtl .body-text, body.rtl .fact-box, body.rtl .big-title { direction: rtl; }
+  body.rtl .nav { direction: ltr; }
+
+  /* ── MINI-GAME STYLES ── */
+  .minigame-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,46,0.7);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .minigame-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .minigame-box {
+    background: white;
+    border: 4px solid var(--ink);
+    border-radius: 20px;
+    padding: 28px 32px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 8px 8px 0 var(--ink);
+    position: relative;
+    text-align: center;
+    transform: scale(0.85);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .minigame-overlay.open .minigame-box { transform: scale(1); }
+
+  .minigame-title {
+    font-family: 'Caveat', cursive;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .minigame-question {
+    font-size: 1.05rem;
+    color: var(--ink);
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .minigame-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .mg-opt {
+    font-family: 'Architects Daughter', cursive;
+    font-size: 0.95rem;
+    background: white;
+    border: 2.5px solid var(--ink);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .mg-opt:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+  .mg-opt:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
+  .mg-opt.correct  { background: #d4f5d8; border-color: var(--green); }
+  .mg-opt.wrong    { background: #ffd6e7; border-color: var(--pink); }
+  .mg-opt.reveal   { background: #d4f5d8; border-color: var(--green); }
+  .mg-opt:disabled { cursor: not-allowed; }
+
+  .mg-feedback {
+    font-family: 'Caveat', cursive;
+    font-size: 1.3rem;
+    min-height: 1.8rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .mg-close {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: var(--yellow);
+    border: 2.5px solid var(--ink);
+    border-radius: 50px;
+    padding: 8px 24px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.1s;
+  }
+  .mg-close:hover { transform: translate(-1px,-1px); }
+
+  /* Interactive robot clicking game */
+  .robot-clicker {
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .robot-clicker:hover { transform: scale(1.05); }
+  .robot-clicker:active { transform: scale(0.95); }
+
+  /* Wiggle animation for interactive elements */
+  @keyframes wiggle {
+    0%,100% { transform: rotate(0deg); }
+    25% { transform: rotate(-4deg); }
+    75% { transform: rotate(4deg); }
+  }
+  .wiggle { animation: wiggle 0.4s ease; }
+
+  /* Bounce animation */
+  @keyframes bounce-in {
+    0%   { transform: scale(0.3); opacity: 0; }
+    60%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .bounce-in { animation: bounce-in 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+
+  /* DRAG AND DROP game */
+  .drag-items { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+  .drag-item {
+    font-family: 'Architects Daughter', cursive;
+    font-size: 0.9rem;
+    background: #ecdcfe;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 7px 14px;
+    cursor: grab;
+    box-shadow: 2px 2px 0 var(--ink);
+    user-select: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .drag-item:hover { transform: translate(-1px,-2px); box-shadow: 3px 4px 0 var(--ink); }
+  .drag-item.dragging { opacity: 0.4; }
+  .drop-zones { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .drop-zone {
+    border: 2.5px dashed #999;
+    border-radius: 12px;
+    padding: 8px 14px;
+    min-width: 90px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #888;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .drop-zone.over { border-color: var(--purple); background: #f5edff; }
+  .drop-zone.filled { border-style: solid; border-color: var(--green); background: #efffef; color: var(--ink); font-size: 0.9rem; }
+  .drop-zone.wrong-fill { border-color: var(--pink); background: #fff0f5; }
+
+  @media (max-width: 600px) {
+    .card { padding: 18px 16px 16px; }
+    .minigame-options { grid-template-columns: 1fr; }
+    .points-display { top: 12px; right: 12px; }
+    .lang-btn { top: 12px; left: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dots" id="dots"></div>
+
+<!-- Points display -->
+<div class="points-display">
+  <span class="points-star">⭐</span>
+  <span id="pointsValue">0</span>
+  <span id="pointsLabel">pts</span>
+</div>
+
+<!-- Language selector -->
+<div class="lang-btn">
+  <button class="lang-opt active" data-lang="en" onclick="setLang('en')">EN</button>
+  <button class="lang-opt" data-lang="fr" onclick="setLang('fr')">FR</button>
+  <button class="lang-opt" data-lang="ar" onclick="setLang('ar')">AR</button>
+</div>
+
+<div class="book" id="book">
+
+  <!-- SLIDE 0: Title -->
+  <div class="slide active">
+    <div class="card yellow-accent" style="transform: rotate(-1deg)">
+      <svg class="drawing robot-clicker" id="titleRobot" width="180" height="140" viewBox="0 0 180 140" onclick="clickRobot(this)" title="Click me!">
+        <!-- Robot body -->
+        <rect x="55" y="60" width="70" height="60" rx="8" fill="white" stroke="#1a1a2e" stroke-width="3"/>
+        <rect x="62" y="28" width="56" height="38" rx="10" fill="white" stroke="#1a1a2e" stroke-width="3"/>
+        <line x1="90" y1="28" x2="90" y2="14" stroke="#1a1a2e" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="90" cy="10" r="5" fill="#ffd94a" stroke="#1a1a2e" stroke-width="2.5" id="antennaBall"/>
+        <circle cx="79" cy="44" r="8" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="101" cy="44" r="8" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="81" cy="45" r="3.5" fill="#1a1a2e" id="eyeL"/>
+        <circle cx="103" cy="45" r="3.5" fill="#1a1a2e" id="eyeR"/>
+        <circle cx="82" cy="43" r="1.2" fill="white"/>
+        <circle cx="104" cy="43" r="1.2" fill="white"/>
+        <path d="M78 57 Q90 64 102 57" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <rect x="68" y="72" width="44" height="30" rx="6" fill="#f0f0f0" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="82" cy="83" r="6" fill="#ff6b9d" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="98" cy="83" r="6" fill="#4cc9f0" stroke="#1a1a2e" stroke-width="2"/>
+        <rect x="74" y="93" width="32" height="5" rx="2.5" fill="#ffd94a" stroke="#1a1a2e" stroke-width="1.5"/>
+        <rect x="28" y="62" width="27" height="18" rx="9" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="125" y="62" width="27" height="18" rx="9" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="63" y="118" width="20" height="20" rx="6" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="97" y="118" width="20" height="20" rx="6" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <path d="M28 62 Q18 50 24 42" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="22" cy="40" r="5" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+        <!-- click hint -->
+        <text x="138" y="20" font-size="16" opacity="0.7">👆</text>
+      </svg>
+      <div class="big-title" data-key="s0_title">ROBO PALS! 🤖</div>
+      <div class="subtitle" data-key="s0_sub">A very silly story about robots<br>for very smart kids (like you!)</div>
+      <div class="fact-box" data-key="s0_fact">👉 Tap <strong>NEXT</strong> to start — and click the robot for bonus points! 🤖</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 1: What IS a robot? -->
+  <div class="slide hidden">
+    <div class="card blue-accent" style="transform: rotate(0.8deg)">
+      <div class="big-title" data-key="s1_title">So... what's a robot? 🤔</div>
+      <svg class="drawing" width="260" height="130" viewBox="0 0 260 130">
+        <circle cx="40" cy="28" r="18" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="34" cy="24" r="3" fill="#1a1a2e"/>
+        <circle cx="46" cy="24" r="3" fill="#1a1a2e"/>
+        <path d="M34 35 Q40 31 46 35" stroke="#1a1a2e" stroke-width="2" fill="none"/>
+        <line x1="40" y1="46" x2="40" y2="88" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="40" y1="60" x2="22" y2="50" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="40" y1="60" x2="56" y2="46" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="40" y1="88" x2="28" y2="112" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="40" y1="88" x2="52" y2="112" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="62" y="38" font-family="Caveat" font-size="28" fill="#ff6b9d">?</text>
+        <text x="78" y="20" font-family="Caveat" font-size="20" fill="#4cc9f0">?</text>
+        <text x="90" y="50" font-family="Caveat" font-size="16" fill="#ffd94a">?</text>
+        <path d="M115 65 Q128 58 140 65" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+        <rect x="148" y="40" width="52" height="55" rx="8" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="156" y="18" width="36" height="28" rx="8" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <line x1="174" y1="18" x2="174" y2="8" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="174" cy="5" r="4" fill="#ffd94a" stroke="#1a1a2e" stroke-width="2"/>
+        <ellipse cx="166" cy="30" rx="5" ry="5" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2"/>
+        <ellipse cx="182" cy="30" rx="5" ry="5" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2"/>
+        <path d="M164 42 Q174 47 184 42" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="130" y="44" width="20" height="12" rx="6" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+        <rect x="200" y="44" width="20" height="12" rx="6" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+        <rect x="158" y="94" width="14" height="18" rx="5" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+        <rect x="180" y="94" width="14" height="18" rx="5" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+        <text x="216" y="30" font-family="Caveat" font-size="18" fill="#ffd94a">✨</text>
+        <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#1a1a2e"/></marker></defs>
+      </svg>
+      <div class="body-text" data-key="s1_body">
+        A robot is a <span class="highlight" data-key="s1_h1">machine that can do stuff</span> on its own (or almost on its own).<br><br>
+        It's basically a really cool machine that <span class="highlight pink" data-key="s1_h2">thinks a little</span>, <span class="highlight blue" data-key="s1_h3">moves around</span>, and <span class="highlight green" data-key="s1_h4">does tasks</span>.<br>
+        <span data-key="s1_end">Kind of like a very obedient pet… but made of metal. 🦾</span>
+      </div>
+      <!-- Mini-game trigger -->
+      <div class="fact-box" style="cursor:pointer; border-color: var(--pink);" onclick="openGame(0)" id="game0trigger">
+        <span data-key="game_challenge">🎮 Challenge: Can you answer a quick question? Tap here! +10 pts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: The 3 Big Parts -->
+  <div class="slide hidden">
+    <div class="card orange-accent" style="transform: rotate(-0.5deg)">
+      <div class="big-title" data-key="s2_title">Every robot has <span class="squiggle" data-key="s2_squiggle">3 big parts</span></div>
+      <svg class="drawing" width="320" height="110" viewBox="0 0 320 110">
+        <rect x="10" y="20" width="80" height="70" rx="12" fill="#ecdcfe" stroke="#1a1a2e" stroke-width="2.5"/>
+        <text x="50" y="14" font-family="Caveat" font-size="14" fill="#a855f7" text-anchor="middle" data-key="svg_brain">BRAIN</text>
+        <path d="M25 42 Q32 32 42 42 Q52 52 62 42 Q72 32 78 42" stroke="#a855f7" stroke-width="2.5" fill="none"/>
+        <path d="M22 58 Q30 48 40 58 Q50 68 60 58 Q70 48 80 58" stroke="#a855f7" stroke-width="2.5" fill="none"/>
+        <text x="50" y="80" font-family="Caveat" font-size="13" fill="#1a1a2e" text-anchor="middle" data-key="svg_decides">decides stuff</text>
+        <path d="M95 55 L115 55" stroke="#1a1a2e" stroke-width="2.5" marker-end="url(#arr2)" stroke-linecap="round"/>
+        <rect x="120" y="20" width="80" height="70" rx="12" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2.5"/>
+        <text x="160" y="14" font-family="Caveat" font-size="14" fill="#0a90c4" text-anchor="middle" data-key="svg_senses">SENSES</text>
+        <text x="160" y="48" font-size="28" text-anchor="middle">👁️</text>
+        <text x="160" y="75" font-family="Caveat" font-size="13" fill="#1a1a2e" text-anchor="middle" data-key="svg_sees">sees &amp; feels</text>
+        <path d="M205 55 L225 55" stroke="#1a1a2e" stroke-width="2.5" marker-end="url(#arr2)" stroke-linecap="round"/>
+        <rect x="230" y="20" width="80" height="70" rx="12" fill="#d4f5d8" stroke="#1a1a2e" stroke-width="2.5"/>
+        <text x="270" y="14" font-family="Caveat" font-size="14" fill="#2a8a2a" text-anchor="middle" data-key="svg_moves">MOVES</text>
+        <text x="270" y="50" font-size="28" text-anchor="middle">💪</text>
+        <text x="270" y="75" font-family="Caveat" font-size="13" fill="#1a1a2e" text-anchor="middle" data-key="svg_arms">arms &amp; wheels</text>
+        <defs><marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#1a1a2e"/></marker></defs>
+      </svg>
+      <div class="body-text" data-key="s2_body">
+        All robots need a <span class="highlight purple" data-key="s2_h1">brain</span> to think,<br>
+        <span class="highlight blue" data-key="s2_h2">senses</span> to understand the world,<br>
+        and <span class="highlight green" data-key="s2_h3">movers</span> to actually DO things.<br>
+      </div>
+      <div class="fact-box" style="cursor:pointer; border-color:var(--purple);" onclick="openGame(1)" id="game1trigger">
+        <span data-key="game_challenge">🎮 Challenge: Can you answer a quick question? Tap here! +10 pts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Sensors -->
+  <div class="slide hidden">
+    <div class="card blue-accent" style="transform: rotate(1.2deg)">
+      <div class="big-title" data-key="s3_title">Sensors = Robot Senses 👀👂</div>
+      <svg class="drawing" width="300" height="120" viewBox="0 0 300 120">
+        <rect x="115" y="30" width="70" height="60" rx="10" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="135" cy="54" r="8" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="165" cy="54" r="8" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="136" cy="55" r="3.5" fill="#1a1a2e"/>
+        <circle cx="166" cy="55" r="3.5" fill="#1a1a2e"/>
+        <path d="M134 72 Q150 79 166 72" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="99" y="42" width="18" height="12" rx="4" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2"/>
+        <rect x="183" y="42" width="18" height="12" rx="4" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="40" cy="28" r="14" fill="#fff8c0" stroke="#1a1a2e" stroke-width="2"/>
+        <text x="40" y="33" font-size="14" text-anchor="middle">☀️</text>
+        <line x1="54" y1="32" x2="112" y2="38" stroke="#1a1a2e" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="20" y="55" font-family="Caveat" font-size="12" fill="#1a1a2e" text-anchor="middle" data-key="svg_light">light</text>
+        <circle cx="40" cy="90" r="14" fill="#ffe4c4" stroke="#1a1a2e" stroke-width="2"/>
+        <text x="40" y="95" font-size="14" text-anchor="middle">🎵</text>
+        <line x1="54" y1="88" x2="112" y2="78" stroke="#1a1a2e" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="22" y="116" font-family="Caveat" font-size="12" fill="#1a1a2e" text-anchor="middle" data-key="svg_sound">sound</text>
+        <circle cx="258" cy="28" r="14" fill="#ffd6e7" stroke="#1a1a2e" stroke-width="2"/>
+        <text x="258" y="33" font-size="14" text-anchor="middle">🤚</text>
+        <line x1="244" y1="32" x2="188" y2="38" stroke="#1a1a2e" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="270" y="55" font-family="Caveat" font-size="12" fill="#1a1a2e" text-anchor="middle" data-key="svg_touch">touch</text>
+        <circle cx="258" cy="90" r="14" fill="#d4f5d8" stroke="#1a1a2e" stroke-width="2"/>
+        <text x="258" y="95" font-size="14" text-anchor="middle">📡</text>
+        <line x1="244" y1="88" x2="188" y2="78" stroke="#1a1a2e" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="276" y="116" font-family="Caveat" font-size="12" fill="#1a1a2e" text-anchor="middle" data-key="svg_dist">distance</text>
+      </svg>
+      <div class="body-text" data-key="s3_body">
+        Sensors are how robots <span class="highlight blue" data-key="s3_h1">feel the world</span>.<br>
+        A <span class="highlight" data-key="s3_h2">light sensor</span> sees brightness. A <span class="highlight orange" data-key="s3_h3">sound sensor</span> hears noise.<br>
+        A <span class="highlight pink" data-key="s3_h4">touch sensor</span> knows when it bumps into things!<br>
+      </div>
+      <div class="fact-box" style="cursor:pointer; border-color:var(--blue);" onclick="openGame(2)" id="game2trigger">
+        <span data-key="game_challenge">🎮 Challenge: Can you answer a quick question? Tap here! +10 pts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Actuators -->
+  <div class="slide hidden">
+    <div class="card green-accent" style="transform: rotate(-1deg)">
+      <div class="big-title" data-key="s4_title">Actuators = Robot Muscles 💪</div>
+      <svg class="drawing" width="300" height="130" viewBox="0 0 300 130">
+        <circle cx="80" cy="65" r="38" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="80" cy="65" r="22" fill="#d4f5d8" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="80" cy="65" r="8" fill="#1a1a2e"/>
+        <line x1="80" y1="43" x2="80" y2="57" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="80" y1="73" x2="80" y2="87" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="58" y1="65" x2="72" y2="65" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="88" y1="65" x2="102" y2="65" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="80" y="120" font-family="Caveat" font-size="15" fill="#2a8a2a" text-anchor="middle" data-key="svg_motor">motor</text>
+        <path d="M55 45 Q42 65 55 85" stroke="#6bcb77" stroke-width="2.5" fill="none" stroke-linecap="round" marker-end="url(#green-arr)"/>
+        <line x1="118" y1="65" x2="145" y2="65" stroke="#1a1a2e" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="170" cy="65" r="28" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="170" cy="65" r="14" fill="#f0f0f0" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="170" cy="65" r="5" fill="#1a1a2e"/>
+        <line x1="170" y1="37" x2="170" y2="51" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+        <line x1="170" y1="79" x2="170" y2="93" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+        <line x1="142" y1="65" x2="156" y2="65" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+        <line x1="184" y1="65" x2="198" y2="65" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+        <text x="170" y="110" font-family="Caveat" font-size="15" fill="#1a1a2e" text-anchor="middle" data-key="svg_wheel">wheel!</text>
+        <path d="M200 42 Q216 65 200 88" stroke="#ffd94a" stroke-width="2.5" fill="none" stroke-linecap="round" marker-end="url(#yellow-arr)"/>
+        <line x1="210" y1="55" x2="240" y2="48" stroke="#1a1a2e" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <line x1="210" y1="75" x2="240" y2="82" stroke="#1a1a2e" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <text x="255" y="58" font-family="Caveat" font-size="18" fill="#ff9f43" data-key="svg_zoom">ZOOM!</text>
+        <defs>
+          <marker id="green-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6bcb77"/></marker>
+          <marker id="yellow-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ffd94a"/></marker>
+        </defs>
+      </svg>
+      <div class="body-text" data-key="s4_body">
+        Actuators are what make robots <span class="highlight green" data-key="s4_h1">actually MOVE</span>.<br>
+        The most common actuator is a <span class="highlight" data-key="s4_h2">motor</span> — it spins really fast<br>
+        and that spinning can turn <span class="highlight orange" data-key="s4_h3">wheels</span>, move <span class="highlight pink" data-key="s4_h4">arms</span>, or even make sounds!
+      </div>
+      <div class="fact-box" data-key="s4_fact">⚡ <span data-key="s4_facttext">Motors turn electricity into movement — magic! (okay, it's physics, but still)</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: The Brain -->
+  <div class="slide hidden">
+    <div class="card purple-accent" style="transform: rotate(0.6deg)">
+      <div class="big-title" data-key="s5_title">The Brain 🧠 (aka the Computer)</div>
+      <svg class="drawing" width="280" height="130" viewBox="0 0 280 130">
+        <rect x="90" y="25" width="100" height="80" rx="8" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="102" y="37" width="76" height="56" rx="6" fill="#ecdcfe" stroke="#1a1a2e" stroke-width="2"/>
+        <line x1="112" y1="25" x2="112" y2="12" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="130" y1="25" x2="130" y2="12" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="150" y1="25" x2="150" y2="12" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="168" y1="25" x2="168" y2="12" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="112" y1="105" x2="112" y2="118" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="130" y1="105" x2="130" y2="118" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="150" y1="105" x2="150" y2="118" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="168" y1="105" x2="168" y2="118" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="90" y1="46" x2="76" y2="46" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="90" y1="65" x2="76" y2="65" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="90" y1="84" x2="76" y2="84" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="190" y1="46" x2="204" y2="46" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="190" y1="65" x2="204" y2="65" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="190" y1="84" x2="204" y2="84" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="140" y="62" font-family="Caveat" font-size="26" fill="#a855f7" text-anchor="middle">01</text>
+        <text x="140" y="85" font-family="Caveat" font-size="20" fill="#a855f7" text-anchor="middle">10 01</text>
+        <text x="30" y="50" font-family="Caveat" font-size="13" fill="#1a1a2e" text-anchor="middle" data-key="svg_from">from</text>
+        <text x="30" y="65" font-family="Caveat" font-size="13" fill="#0a90c4" text-anchor="middle" data-key="svg_sensors2">sensors</text>
+        <text x="250" y="50" font-family="Caveat" font-size="13" fill="#1a1a2e" text-anchor="middle" data-key="svg_to">to</text>
+        <text x="250" y="65" font-family="Caveat" font-size="13" fill="#2a8a2a" text-anchor="middle" data-key="svg_motors2">motors</text>
+        <circle cx="160" cy="10" r="4" fill="#ecdcfe" stroke="#1a1a2e" stroke-width="1.5"/>
+        <circle cx="172" cy="6" r="3" fill="#ecdcfe" stroke="#1a1a2e" stroke-width="1.5"/>
+        <text x="184" y="4" font-family="Caveat" font-size="14" fill="#a855f7">hmm...</text>
+      </svg>
+      <div class="body-text" data-key="s5_body">
+        The brain is just a tiny <span class="highlight purple" data-key="s5_h1">computer chip</span> inside the robot.<br>
+        It reads info from <span class="highlight blue" data-key="s5_h2">sensors</span>, thinks about it (very fast!),<br>
+        and tells the <span class="highlight green" data-key="s5_h3">motors</span> what to do.<br>
+      </div>
+      <div class="fact-box" style="cursor:pointer; border-color:var(--purple);" onclick="openGame(3)" id="game3trigger">
+        <span data-key="game_challenge">🎮 Challenge: Can you answer a quick question? Tap here! +10 pts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: How it all works together -->
+  <div class="slide hidden">
+    <div class="card pink-accent" style="transform: rotate(-0.8deg)">
+      <div class="big-title" data-key="s6_title">It all works together! 🎉</div>
+      <svg class="drawing" width="320" height="115" viewBox="0 0 320 115">
+        <rect x="5" y="30" width="80" height="55" rx="12" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2.5"/>
+        <text x="45" y="52" font-size="22" text-anchor="middle">👁️</text>
+        <text x="45" y="70" font-family="Caveat" font-size="14" fill="#1a1a2e" text-anchor="middle" data-key="svg_sense">SENSE IT</text>
+        <text x="45" y="83" font-family="Caveat" font-size="11" fill="#555" text-anchor="middle" data-key="svg_seecat">"I see a cat!"</text>
+        <path d="M88 57 L110 57" stroke="#1a1a2e" stroke-width="2.5" marker-end="url(#dark-arr)" stroke-linecap="round"/>
+        <rect x="113" y="30" width="80" height="55" rx="12" fill="#ecdcfe" stroke="#1a1a2e" stroke-width="2.5"/>
+        <text x="153" y="52" font-size="22" text-anchor="middle">🧠</text>
+        <text x="153" y="70" font-family="Caveat" font-size="14" fill="#1a1a2e" text-anchor="middle" data-key="svg_think">THINK IT</text>
+        <text x="153" y="83" font-family="Caveat" font-size="11" fill="#555" text-anchor="middle" data-key="svg_gohi">"go say hi!"</text>
+        <path d="M196 57 L218 57" stroke="#1a1a2e" stroke-width="2.5" marker-end="url(#dark-arr)" stroke-linecap="round"/>
+        <rect x="221" y="30" width="80" height="55" rx="12" fill="#d4f5d8" stroke="#1a1a2e" stroke-width="2.5"/>
+        <text x="261" y="52" font-size="22" text-anchor="middle">🦾</text>
+        <text x="261" y="70" font-family="Caveat" font-size="14" fill="#1a1a2e" text-anchor="middle" data-key="svg_doit">DO IT</text>
+        <text x="261" y="83" font-family="Caveat" font-size="11" fill="#555" text-anchor="middle" data-key="svg_roll">"ROLL!"</text>
+        <path d="M261 85 Q261 105 153 105 Q45 105 45 85" stroke="#ff6b9d" stroke-width="2" fill="none" stroke-dasharray="5,4" marker-end="url(#pink-arr)" stroke-linecap="round"/>
+        <text x="153" y="100" font-family="Caveat" font-size="11" fill="#ff6b9d" text-anchor="middle" data-key="svg_again">do it again!</text>
+        <defs>
+          <marker id="dark-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#1a1a2e"/></marker>
+          <marker id="pink-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff6b9d"/></marker>
+        </defs>
+      </svg>
+      <div class="body-text" data-key="s6_body">
+        Robots do this loop <span class="highlight" data-key="s6_h1">millions of times per second</span>:<br>
+        <strong data-key="s6_loop">Sense → Think → Act → Sense → Think → Act...</strong><br>
+        <span data-key="s6_end">That's how a robot vacuum doesn't fall down the stairs!</span><br>
+        (Most of the time anyway 😅)
+      </div>
+      <!-- Drag & drop mini game -->
+      <div class="fact-box" style="cursor:pointer; border-color:var(--pink);" onclick="openGame(4)" id="game4trigger">
+        <span data-key="game_challenge">🎮 Challenge: Can you answer a quick question? Tap here! +10 pts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Real robots -->
+  <div class="slide hidden">
+    <div class="card yellow-accent" style="transform: rotate(1deg)">
+      <div class="big-title" data-key="s7_title">Robots in real life! 🌍</div>
+      <svg class="drawing" width="320" height="115" viewBox="0 0 320 115">
+        <circle cx="42" cy="65" r="36" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="42" cy="65" r="22" fill="#f0f0f0" stroke="#1a1a2e" stroke-width="1.5"/>
+        <circle cx="42" cy="55" r="5" fill="#caf0fb" stroke="#1a1a2e" stroke-width="1.5"/>
+        <circle cx="33" cy="68" r="4" fill="#ffd94a" stroke="#1a1a2e" stroke-width="1.5"/>
+        <circle cx="51" cy="68" r="4" fill="#ff6b9d" stroke="#1a1a2e" stroke-width="1.5"/>
+        <text x="42" y="100" font-family="Caveat" font-size="12" fill="#1a1a2e" text-anchor="middle" data-key="svg_vacuum">robot vacuum</text>
+        <rect x="108" y="45" width="70" height="45" rx="8" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="120" cy="94" r="10" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="143" cy="98" r="10" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <circle cx="166" cy="94" r="10" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <line x1="143" y1="45" x2="143" y2="26" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="135" y="18" width="22" height="14" rx="4" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="146" cy="25" r="4" fill="#1a1a2e"/>
+        <text x="143" y="112" font-family="Caveat" font-size="12" fill="#1a1a2e" text-anchor="middle" data-key="svg_mars">mars rover 🔴</text>
+        <rect x="228" y="30" width="20" height="60" rx="6" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <line x1="238" y1="50" x2="268" y2="34" stroke="#1a1a2e" stroke-width="3" stroke-linecap="round"/>
+        <line x1="268" y1="34" x2="290" y2="48" stroke="#1a1a2e" stroke-width="3" stroke-linecap="round"/>
+        <line x1="290" y1="48" x2="300" y2="40" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="290" y1="48" x2="300" y2="56" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="255" y="112" font-family="Caveat" font-size="12" fill="#1a1a2e" text-anchor="middle" data-key="svg_factory">factory arm</text>
+        <text x="95" y="25" font-size="16">⭐</text>
+        <text x="200" y="30" font-size="14">✨</text>
+      </svg>
+      <div class="body-text" data-key="s7_body">
+        <span data-key="s7_l1">Robot vacuums clean your floor! 🧹</span><br>
+        <span data-key="s7_l2">Mars rovers explore <span class="highlight orange">other planets</span> all by themselves! 🔴</span><br>
+        <span data-key="s7_l3">Factory robot arms build <span class="highlight">cars and phones</span> super precisely!</span><br>
+      </div>
+      <div class="fact-box" data-key="s7_fact">🚀 <span data-key="s7_facttext">There are robots on Mars RIGHT NOW. While you're reading this. Wild, right?!</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: YOU can build one! -->
+  <div class="slide hidden">
+    <div class="card green-accent" style="transform: rotate(-1.2deg)">
+      <div class="big-title" data-key="s8_title">YOU can build a robot! 🛠️</div>
+      <svg class="drawing" width="260" height="125" viewBox="0 0 260 125">
+        <circle cx="80" cy="28" r="22" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <path d="M58 22 Q80 6 102 22" fill="#ffd94a" stroke="#1a1a2e" stroke-width="2.5"/>
+        <line x1="56" y1="22" x2="104" y2="22" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="72" cy="28" r="3.5" fill="#1a1a2e"/>
+        <circle cx="88" cy="28" r="3.5" fill="#1a1a2e"/>
+        <path d="M72 37 Q80 42 88 37" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <line x1="80" y1="50" x2="80" y2="88" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="80" y1="62" x2="50" y2="72" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="50" y1="72" x2="38" y2="60" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+        <rect x="28" y="52" width="14" height="6" rx="2" fill="#ff9f43" stroke="#1a1a2e" stroke-width="1.5" transform="rotate(-35 35 55)"/>
+        <line x1="80" y1="62" x2="110" y2="55" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="80" y1="88" x2="66" y2="115" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="80" y1="88" x2="94" y2="115" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="140" y="50" width="50" height="52" rx="8" fill="white" stroke="#1a1a2e" stroke-width="2.5" stroke-dasharray="6,3"/>
+        <rect x="152" y="28" width="26" height="28" rx="8" fill="white" stroke="#1a1a2e" stroke-width="2.5" stroke-dasharray="6,3"/>
+        <circle cx="161" cy="40" r="5" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="175" cy="40" r="5" fill="#caf0fb" stroke="#1a1a2e" stroke-width="2"/>
+        <path d="M158 50 Q165 55 172 50" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <text x="200" y="42" font-size="18">✨</text>
+        <text x="210" y="75" font-size="14">⭐</text>
+        <path d="M114 72 Q126 65 137 68" stroke="#ff6b9d" stroke-width="2" fill="none" stroke-dasharray="4,3" marker-end="url(#pink-arr2)" stroke-linecap="round"/>
+        <defs><marker id="pink-arr2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ff6b9d"/></marker></defs>
+      </svg>
+      <div class="body-text" data-key="s8_body">
+        <span data-key="s8_l1">With kits like <span class="highlight">LEGO Mindstorms</span>, <span class="highlight orange">Arduino</span>, or <span class="highlight blue">Micro:bit</span>,</span><br>
+        <span data-key="s8_l2">you can build real working robots yourself!</span><br>
+        <span data-key="s8_l3">You'll use <span class="highlight pink">sensors</span>, <span class="highlight green">motors</span>, and even write <span class="highlight purple">code</span>!</span>
+      </div>
+      <div class="fact-box" data-key="s8_fact">🎮 <span data-key="s8_facttext">Coding a robot is basically giving superpowers to a machine you made. HOW COOL IS THAT?!</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Final -->
+  <div class="slide hidden">
+    <div class="card pink-accent" style="transform: rotate(0.5deg)">
+      <svg class="drawing" width="280" height="120" viewBox="0 0 280 120">
+        <rect x="100" y="55" width="80" height="60" rx="8" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="108" y="25" width="64" height="36" rx="10" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <line x1="140" y1="25" x2="140" y2="12" stroke="#1a1a2e" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="140" cy="8" r="5" fill="#ff6b9d" stroke="#1a1a2e" stroke-width="2"/>
+        <polygon points="140,2 125,28 155,28" fill="#ffd94a" stroke="#1a1a2e" stroke-width="2"/>
+        <circle cx="130" cy="26" r="3" fill="#ff6b9d"/>
+        <circle cx="150" cy="26" r="3" fill="#4cc9f0"/>
+        <path d="M118 38 Q124 33 130 38" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M150 38 Q156 33 162 38" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M118 50 Q140 60 162 50" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <rect x="60" y="58" width="40" height="15" rx="7" fill="white" stroke="#1a1a2e" stroke-width="2.5" transform="rotate(-25 80 65)"/>
+        <rect x="180" y="58" width="40" height="15" rx="7" fill="white" stroke="#1a1a2e" stroke-width="2.5" transform="rotate(25 200 65)"/>
+        <rect x="108" y="113" width="20" height="18" rx="5" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="152" y="113" width="20" height="18" rx="5" fill="white" stroke="#1a1a2e" stroke-width="2.5"/>
+        <rect x="30" y="20" width="10" height="6" rx="2" fill="#ffd94a" stroke="#1a1a2e" stroke-width="1.5" transform="rotate(30 35 23)"/>
+        <rect x="50" y="50" width="8" height="5" rx="2" fill="#ff6b9d" stroke="#1a1a2e" stroke-width="1.5" transform="rotate(-15 54 52)"/>
+        <rect x="22" y="70" width="9" height="5" rx="2" fill="#4cc9f0" stroke="#1a1a2e" stroke-width="1.5" transform="rotate(45 26 72)"/>
+        <rect x="228" y="22" width="10" height="6" rx="2" fill="#6bcb77" stroke="#1a1a2e" stroke-width="1.5" transform="rotate(-20 233 25)"/>
+        <rect x="248" y="55" width="8" height="5" rx="2" fill="#a855f7" stroke="#1a1a2e" stroke-width="1.5" transform="rotate(35 252 57)"/>
+        <rect x="235" y="80" width="9" height="5" rx="2" fill="#ff9f43" stroke="#1a1a2e" stroke-width="1.5" transform="rotate(-40 239 82)"/>
+        <text x="20" y="16" font-size="18">🎉</text>
+        <text x="242" y="18" font-size="18">🎊</text>
+      </svg>
+      <div class="big-title" data-key="s9_title">You're a Robo Expert! 🏆</div>
+      <div class="body-text" data-key="s9_body">
+        <span data-key="s9_l1">You now know that robots have <span class="highlight blue">sensors</span> to feel,</span><br>
+        <span data-key="s9_l2"><span class="highlight green">motors</span> to move, and a <span class="highlight purple">brain</span> to think!</span><br>
+        <span data-key="s9_l3">The world needs more people who understand robots —</span><br>
+        <strong data-key="s9_you">maybe that's YOU!</strong> 🤖❤️
+      </div>
+      <div class="fact-box" id="finalScore">
+        <span data-key="s9_fact">🌟 Final score: </span><span id="finalScoreVal">0</span> <span data-key="s9_pts">points — Amazing job, Robo Pal!</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /book -->
+
+<!-- Mini-game overlay -->
+<div class="minigame-overlay" id="mgOverlay">
+  <div class="minigame-box">
+    <div class="minigame-title" id="mgTitle">Quick Quiz! 🤖</div>
+    <div class="minigame-question" id="mgQuestion"></div>
+    <div class="minigame-options" id="mgOptions"></div>
+    <div class="mg-feedback" id="mgFeedback"></div>
+    <button class="mg-close" id="mgClose" onclick="closeGame()" style="display:none" data-key="mg_close">Continue ➡️</button>
+  </div>
+</div>
+
+<!-- Navigation -->
+<nav class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← <span data-key="nav_back">BACK</span></button>
+  <span class="page-indicator" id="pageIndicator">1 / 10</span>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)"><span data-key="nav_next">NEXT</span> →</button>
+</nav>
+
+<script>
+// ─────────────────────────────────────────
+// TRANSLATIONS
+// ─────────────────────────────────────────
+const T = {
+  en: {
+    s0_title: "ROBO PALS! 🤖",
+    s0_sub: "A very silly story about robots<br>for very smart kids (like you!)",
+    s0_fact: "👉 Tap <strong>NEXT</strong> to start — and click the robot for bonus points! 🤖",
+    s1_title: "So... what's a robot? 🤔",
+    s1_body: `A robot is a <span class="highlight">machine that can do stuff</span> on its own (or almost on its own).<br><br>It's basically a really cool machine that <span class="highlight pink">thinks a little</span>, <span class="highlight blue">moves around</span>, and <span class="highlight green">does tasks</span>.<br>Kind of like a very obedient pet… but made of metal. 🦾`,
+    s2_title: `Every robot has <span class="squiggle">3 big parts</span>`,
+    s2_body: `All robots need a <span class="highlight purple">brain</span> to think,<br><span class="highlight blue">senses</span> to understand the world,<br>and <span class="highlight green">movers</span> to actually DO things.<br>`,
+    s3_title: "Sensors = Robot Senses 👀👂",
+    s3_body: `Sensors are how robots <span class="highlight blue">feel the world</span>.<br>A <span class="highlight">light sensor</span> sees brightness. A <span class="highlight orange">sound sensor</span> hears noise.<br>A <span class="highlight pink">touch sensor</span> knows when it bumps into things!<br>`,
+    s4_title: "Actuators = Robot Muscles 💪",
+    s4_body: `Actuators are what make robots <span class="highlight green">actually MOVE</span>.<br>The most common actuator is a <span class="highlight">motor</span> — it spins really fast<br>and that spinning can turn <span class="highlight orange">wheels</span>, move <span class="highlight pink">arms</span>, or even make sounds!`,
+    s4_facttext: "Motors turn electricity into movement — magic! (okay, it's physics, but still)",
+    s5_title: "The Brain 🧠 (aka the Computer)",
+    s5_body: `The brain is just a tiny <span class="highlight purple">computer chip</span> inside the robot.<br>It reads info from <span class="highlight blue">sensors</span>, thinks about it (very fast!),<br>and tells the <span class="highlight green">motors</span> what to do.<br>`,
+    s6_title: "It all works together! 🎉",
+    s6_body: `Robots do this loop <span class="highlight">millions of times per second</span>:<br><strong>Sense → Think → Act → Sense → Think → Act...</strong><br>That's how a robot vacuum doesn't fall down the stairs!<br>(Most of the time anyway 😅)`,
+    s7_title: "Robots in real life! 🌍",
+    s7_body: `Robot vacuums clean your floor! 🧹<br>Mars rovers explore <span class="highlight orange">other planets</span> all by themselves! 🔴<br>Factory robot arms build <span class="highlight">cars and phones</span> super precisely!<br>`,
+    s7_facttext: "There are robots on Mars RIGHT NOW. While you're reading this. Wild, right?!",
+    s8_title: "YOU can build a robot! 🛠️",
+    s8_body: `With kits like <span class="highlight">LEGO Mindstorms</span>, <span class="highlight orange">Arduino</span>, or <span class="highlight blue">Micro:bit</span>,<br>you can build real working robots yourself!<br>You'll use <span class="highlight pink">sensors</span>, <span class="highlight green">motors</span>, and even write <span class="highlight purple">code</span>!`,
+    s8_facttext: "Coding a robot is basically giving superpowers to a machine you made. HOW COOL IS THAT?!",
+    s9_title: "You're a Robo Expert! 🏆",
+    s9_body: `You now know that robots have <span class="highlight blue">sensors</span> to feel,<br><span class="highlight green">motors</span> to move, and a <span class="highlight purple">brain</span> to think!<br>The world needs more people who understand robots —<br><strong>maybe that's YOU!</strong> 🤖❤️`,
+    s9_fact: "🌟 Final score: ",
+    s9_pts: "points — Amazing job, Robo Pal!",
+    game_challenge: "🎮 Quick Quiz! Tap here to earn +10 pts",
+    mg_close: "Continue ➡️",
+    nav_back: "BACK",
+    nav_next: "NEXT",
+    pts: "pts",
+    svg_brain: "BRAIN", svg_decides: "decides stuff", svg_senses: "SENSES", svg_sees: "sees & feels",
+    svg_moves: "MOVES", svg_arms: "arms & wheels", svg_light: "light", svg_sound: "sound",
+    svg_touch: "touch", svg_dist: "distance", svg_motor: "motor", svg_wheel: "wheel!",
+    svg_zoom: "ZOOM!", svg_from: "from", svg_sensors2: "sensors", svg_to: "to", svg_motors2: "motors",
+    svg_sense: "SENSE IT", svg_seecat: '"I see a cat!"', svg_think: "THINK IT", svg_gohi: '"go say hi!"',
+    svg_doit: "DO IT", svg_roll: '"ROLL!"', svg_again: "do it again!",
+    svg_vacuum: "robot vacuum", svg_mars: "mars rover 🔴", svg_factory: "factory arm",
+  },
+  fr: {
+    s0_title: "ROBO PALS! 🤖",
+    s0_sub: "Une histoire rigolote sur les robots<br>pour les enfants malins (comme toi !)",
+    s0_fact: "👉 Appuie sur <strong>SUIVANT</strong> pour commencer — clique le robot pour des points bonus ! 🤖",
+    s1_title: "Alors... c'est quoi un robot ? 🤔",
+    s1_body: `Un robot est une <span class="highlight">machine qui fait des choses</span> toute seule (ou presque).<br><br>C'est une machine super cool qui <span class="highlight pink">réfléchit un peu</span>, <span class="highlight blue">se déplace</span>, et <span class="highlight green">accomplit des tâches</span>.<br>Un peu comme un animal obéissant… mais en métal. 🦾`,
+    s2_title: `Chaque robot a <span class="squiggle">3 grandes parties</span>`,
+    s2_body: `Tous les robots ont besoin d'un <span class="highlight purple">cerveau</span> pour réfléchir,<br>de <span class="highlight blue">sens</span> pour comprendre le monde,<br>et de <span class="highlight green">moteurs</span> pour agir.<br>`,
+    s3_title: "Capteurs = Sens du Robot 👀👂",
+    s3_body: `Les capteurs permettent aux robots de <span class="highlight blue">sentir le monde</span>.<br>Un <span class="highlight">capteur de lumière</span> voit la luminosité. Un <span class="highlight orange">capteur de son</span> entend.<br>Un <span class="highlight pink">capteur tactile</span> sait quand il heurte quelque chose !<br>`,
+    s4_title: "Actionneurs = Muscles du Robot 💪",
+    s4_body: `Les actionneurs font que les robots <span class="highlight green">bougent vraiment</span>.<br>L'actionneur le plus courant est un <span class="highlight">moteur</span> — il tourne très vite<br>et ce mouvement peut tourner des <span class="highlight orange">roues</span>, déplacer des <span class="highlight pink">bras</span>, ou faire des sons !`,
+    s4_facttext: "Les moteurs transforment l'électricité en mouvement — de la magie ! (bon, c'est de la physique, mais quand même)",
+    s5_title: "Le Cerveau 🧠 (l'Ordinateur)",
+    s5_body: `Le cerveau est juste une petite <span class="highlight purple">puce électronique</span> dans le robot.<br>Elle lit les infos des <span class="highlight blue">capteurs</span>, y réfléchit (très vite !),<br>et dit aux <span class="highlight green">moteurs</span> quoi faire.<br>`,
+    s6_title: "Tout fonctionne ensemble ! 🎉",
+    s6_body: `Les robots font cette boucle <span class="highlight">des millions de fois par seconde</span>:<br><strong>Sentir → Penser → Agir → Sentir → Penser → Agir...</strong><br>C'est comme ça qu'un aspirateur robot ne tombe pas dans les escaliers !<br>(La plupart du temps 😅)`,
+    s7_title: "Les robots dans la vraie vie ! 🌍",
+    s7_body: `Les aspirateurs robots nettoient ton sol ! 🧹<br>Les rovers sur Mars explorent <span class="highlight orange">d'autres planètes</span> tout seuls ! 🔴<br>Les bras robotisés d'usine fabriquent <span class="highlight">voitures et téléphones</span> précisément !<br>`,
+    s7_facttext: "Il y a des robots sur Mars EN CE MOMENT MÊME. Pendant que tu lis ça. Dingue, non ?!",
+    s8_title: "TOI tu peux construire un robot ! 🛠️",
+    s8_body: `Avec des kits comme <span class="highlight">LEGO Mindstorms</span>, <span class="highlight orange">Arduino</span>, ou <span class="highlight blue">Micro:bit</span>,<br>tu peux construire de vrais robots toi-même !<br>Tu utiliseras des <span class="highlight pink">capteurs</span>, des <span class="highlight green">moteurs</span>, et même écrire du <span class="highlight purple">code</span> !`,
+    s8_facttext: "Coder un robot, c'est donner des super-pouvoirs à une machine que tu as fabriquée. TROP COOL !",
+    s9_title: "Tu es un Expert Robo ! 🏆",
+    s9_body: `Tu sais maintenant que les robots ont des <span class="highlight blue">capteurs</span> pour sentir,<br>des <span class="highlight green">moteurs</span> pour bouger, et un <span class="highlight purple">cerveau</span> pour réfléchir !<br>Le monde a besoin de gens qui comprennent les robots —<br><strong>et si c'était TOI ?</strong> 🤖❤️`,
+    s9_fact: "🌟 Score final : ",
+    s9_pts: "points — Bravo, petit Robo Pal !",
+    game_challenge: "🎮 Quiz rapide ! Appuie ici pour +10 pts",
+    mg_close: "Continuer ➡️",
+    nav_back: "RETOUR",
+    nav_next: "SUIVANT",
+    pts: "pts",
+    svg_brain: "CERVEAU", svg_decides: "décide", svg_senses: "SENS", svg_sees: "voit & sent",
+    svg_moves: "BOUGE", svg_arms: "bras & roues", svg_light: "lumière", svg_sound: "son",
+    svg_touch: "toucher", svg_dist: "distance", svg_motor: "moteur", svg_wheel: "roue !",
+    svg_zoom: "ZOOM !", svg_from: "depuis", svg_sensors2: "capteurs", svg_to: "vers", svg_motors2: "moteurs",
+    svg_sense: "SENTIR", svg_seecat: '"Je vois un chat !"', svg_think: "RÉFLÉCHIR", svg_gohi: '"aller dire bonjour !"',
+    svg_doit: "AGIR", svg_roll: '"ROULER !"', svg_again: "recommencer !",
+    svg_vacuum: "aspirateur robot", svg_mars: "rover Mars 🔴", svg_factory: "bras d'usine",
+  },
+  ar: {
+    s0_title: "روبو بالز! 🤖",
+    s0_sub: "قصة مضحكة عن الروبوتات<br>للأطفال الأذكياء (مثلك أنت!)",
+    s0_fact: "👉 اضغط على <strong>التالي</strong> للبدء — وانقر الروبوت للحصول على نقاط إضافية! 🤖",
+    s1_title: "إذن... ما هو الروبوت؟ 🤔",
+    s1_body: `الروبوت هو <span class="highlight">آلة تعمل بمفردها</span> (أو تقريباً).<br><br>إنه آلة رائعة جداً <span class="highlight pink">تفكّر قليلاً</span>، <span class="highlight blue">تتحرّك</span>، وتُنجز <span class="highlight green">المهام</span>.<br>مثل حيوان أليف مُطيع جداً… لكن مصنوع من معدن. 🦾`,
+    s2_title: `كل روبوت يملك <span class="squiggle">3 أجزاء كبيرة</span>`,
+    s2_body: `كل روبوت يحتاج إلى <span class="highlight purple">دماغ</span> للتفكير،<br><span class="highlight blue">حواس</span> لفهم العالم،<br>و<span class="highlight green">محرّكات</span> للقيام بالأشياء.<br>`,
+    s3_title: "المستشعرات = حواس الروبوت 👀👂",
+    s3_body: `المستشعرات هي كيف تُدرك الروبوتات <span class="highlight blue">العالم من حولها</span>.<br><span class="highlight">مستشعر الضوء</span> يرى السطوع. <span class="highlight orange">مستشعر الصوت</span> يسمع الأصوات.<br><span class="highlight pink">مستشعر اللمس</span> يعرف عندما يصطدم بشيء !<br>`,
+    s4_title: "المحرّكات = عضلات الروبوت 💪",
+    s4_body: `المحرّكات هي التي تجعل الروبوتات <span class="highlight green">تتحرّك فعلاً</span>.<br>أكثر محرّك شائع هو <span class="highlight">الموتور</span> — يدور بسرعة كبيرة<br>ويمكنه تحريك <span class="highlight orange">العجلات</span> وتحريك <span class="highlight pink">الذراعين</span> وحتى إصدار أصوات!`,
+    s4_facttext: "المحرّكات تحوّل الكهرباء إلى حركة — سحر! (حسناً، هي فيزياء، لكنها رائعة!)",
+    s5_title: "الدماغ 🧠 (أي الحاسوب)",
+    s5_body: `الدماغ هو مجرد <span class="highlight purple">شريحة إلكترونية صغيرة</span> داخل الروبوت.<br>تقرأ المعلومات من <span class="highlight blue">المستشعرات</span>، تفكّر فيها (بسرعة فائقة!)،<br>وتأمر <span class="highlight green">المحرّكات</span> بما يجب فعله.<br>`,
+    s6_title: "كل شيء يعمل معاً! 🎉",
+    s6_body: `الروبوتات تقوم بهذه الحلقة <span class="highlight">ملايين المرات في الثانية</span>:<br><strong>الإحساس ← التفكير ← الفعل ← الإحساس ← التفكير ← الفعل...</strong><br>هكذا لا يسقط المكنسة الروبوتية في الدرج!<br>(معظم الوقت على الأقل 😅)`,
+    s7_title: "الروبوتات في الحياة الحقيقية! 🌍",
+    s7_body: `المكانس الروبوتية تنظّف أرضيتك! 🧹<br>مركبات المريخ تستكشف <span class="highlight orange">كواكب أخرى</span> وحدها! 🔴<br>أذرع المصانع الآلية تبني <span class="highlight">السيارات والهواتف</span> بدقة فائقة!<br>`,
+    s7_facttext: "هناك روبوتات على المريخ الآن في هذه اللحظة. بينما تقرأ هذا. مذهل، أليس كذلك؟!",
+    s8_title: "أنتَ تستطيع بناء روبوت! 🛠️",
+    s8_body: `مع مجموعات مثل <span class="highlight">LEGO Mindstorms</span>، <span class="highlight orange">Arduino</span>، أو <span class="highlight blue">Micro:bit</span>،<br>تستطيع بناء روبوتات حقيقية بنفسك !<br>ستستخدم <span class="highlight pink">مستشعرات</span>، <span class="highlight green">محرّكات</span>، وحتى تكتب <span class="highlight purple">كوداً</span>!`,
+    s8_facttext: "برمجة روبوت تعني إعطاء قوى خارقة لآلة صنعتها بيدك. رائع جداً!",
+    s9_title: "أنتَ خبير روبوتات! 🏆",
+    s9_body: `الآن تعرف أن الروبوتات تملك <span class="highlight blue">مستشعرات</span> للإحساس،<br><span class="highlight green">محرّكات</span> للتحرّك، و<span class="highlight purple">دماغاً</span> للتفكير!<br>العالم يحتاج أشخاصاً يفهمون الروبوتات —<br><strong>ربما هذا الشخص هو أنتَ!</strong> 🤖❤️`,
+    s9_fact: "🌟 النتيجة النهائية: ",
+    s9_pts: "نقاط — عمل رائع يا رفيق روبو!",
+    game_challenge: "🎮 اختبار سريع! اضغط هنا لـ +10 نقاط",
+    mg_close: "متابعة ➡️",
+    nav_back: "رجوع",
+    nav_next: "التالي",
+    pts: "نقاط",
+    svg_brain: "الدماغ", svg_decides: "يقرر", svg_senses: "الحواس", svg_sees: "يرى ويحسّ",
+    svg_moves: "يتحرك", svg_arms: "أذرع وعجلات", svg_light: "ضوء", svg_sound: "صوت",
+    svg_touch: "لمس", svg_dist: "مسافة", svg_motor: "موتور", svg_wheel: "عجلة!",
+    svg_zoom: "زووم!", svg_from: "من", svg_sensors2: "مستشعرات", svg_to: "إلى", svg_motors2: "محرّكات",
+    svg_sense: "الإحساس", svg_seecat: '"أرى قطة!"', svg_think: "التفكير", svg_gohi: '"اذهب لإلقاء التحية!"',
+    svg_doit: "الفعل", svg_roll: '"انطلق!"', svg_again: "افعل مجدداً!",
+    svg_vacuum: "مكنسة روبوت", svg_mars: "مركبة المريخ 🔴", svg_factory: "ذراع المصنع",
+  }
+};
+
+// ─────────────────────────────────────────
+// QUIZ DATA (per language)
+// ─────────────────────────────────────────
+const GAMES = {
+  en: [
+    { q: "What is a robot?", opts: ["A magical creature", "A machine that works on its own", "A type of toy car", "A flying animal"], ans: 1, ok: "🎉 Correct! Robots are machines that work (almost) on their own!", bad: "Not quite! A robot is a machine that can work on its own." },
+    { q: "Every robot has 3 big parts. Which is NOT one of them?", opts: ["Brain 🧠", "Senses 👁️", "Wings 🦋", "Movers 💪"], ans: 2, ok: "✅ Right! Robots don't have wings (usually!)", bad: "Oops! Robots have a brain, senses, and movers — not wings!" },
+    { q: "What does a TOUCH sensor do?", opts: ["Sees light", "Hears sounds", "Knows when it bumps into things", "Smells flowers"], ans: 2, ok: "🌟 Spot on! A touch sensor detects when the robot bumps into something.", bad: "Close! A touch sensor knows when the robot bumps into things." },
+    { q: "What part tells a robot's motors what to do?", opts: ["The wheels", "The battery", "The brain (computer chip)", "The antenna"], ans: 2, ok: "🧠 Yes! The brain reads sensor info and tells motors what to do!", bad: "Almost! It's the brain (computer chip) that tells the motors what to do." },
+    { q: "What loop do robots do millions of times per second?", opts: ["Eat → Sleep → Play", "Sense → Think → Act", "Run → Jump → Stop", "Beep → Boop → Beep"], ans: 1, ok: "🔄 Perfect! Sense → Think → Act, over and over!", bad: "Not quite! The loop is: Sense → Think → Act." },
+  ],
+  fr: [
+    { q: "Qu'est-ce qu'un robot ?", opts: ["Une créature magique", "Une machine qui travaille seule", "Un type de voiture jouet", "Un animal volant"], ans: 1, ok: "🎉 Correct ! Les robots sont des machines qui travaillent (presque) seules !", bad: "Pas tout à fait ! Un robot est une machine qui peut travailler seule." },
+    { q: "Chaque robot a 3 grandes parties. Laquelle n'en fait PAS partie ?", opts: ["Cerveau 🧠", "Sens 👁️", "Ailes 🦋", "Moteurs 💪"], ans: 2, ok: "✅ Exact ! Les robots n'ont pas d'ailes (en général !)", bad: "Oups ! Les robots ont un cerveau, des sens et des moteurs — pas d'ailes !" },
+    { q: "Que fait un capteur TACTILE ?", opts: ["Voit la lumière", "Entend les sons", "Sait quand il heurte quelque chose", "Sent les fleurs"], ans: 2, ok: "🌟 Parfait ! Un capteur tactile détecte quand le robot heurte quelque chose.", bad: "Presque ! Un capteur tactile sait quand le robot heurte quelque chose." },
+    { q: "Quelle partie dit aux moteurs quoi faire ?", opts: ["Les roues", "La batterie", "Le cerveau (puce électronique)", "L'antenne"], ans: 2, ok: "🧠 Oui ! Le cerveau lit les infos des capteurs et dit aux moteurs quoi faire !", bad: "Presque ! C'est le cerveau (puce) qui commande les moteurs." },
+    { q: "Quelle boucle les robots font-ils des millions de fois par seconde ?", opts: ["Manger → Dormir → Jouer", "Sentir → Penser → Agir", "Courir → Sauter → Stopper", "Bip → Boup → Bip"], ans: 1, ok: "🔄 Parfait ! Sentir → Penser → Agir, encore et encore !", bad: "Pas tout à fait ! La boucle est : Sentir → Penser → Agir." },
+  ],
+  ar: [
+    { q: "ما هو الروبوت؟", opts: ["مخلوق سحري", "آلة تعمل بمفردها", "نوع من سيارات الألعاب", "حيوان طائر"], ans: 1, ok: "🎉 صحيح! الروبوتات آلات تعمل (تقريباً) بمفردها!", bad: "ليس تماماً! الروبوت هو آلة تعمل بمفردها." },
+    { q: "كل روبوت يملك 3 أجزاء كبيرة. أيّها ليس منها؟", opts: ["الدماغ 🧠", "الحواس 👁️", "الأجنحة 🦋", "المحرّكات 💪"], ans: 2, ok: "✅ صحيح! الروبوتات لا تملك أجنحة (عادةً!)", bad: "أوبس! الروبوتات تملك دماغاً وحواساً ومحرّكات — لكن ليس أجنحة!" },
+    { q: "ماذا يفعل مستشعر اللمس؟", opts: ["يرى الضوء", "يسمع الأصوات", "يعرف عندما يصطدم بشيء", "يشمّ الزهور"], ans: 2, ok: "🌟 ممتاز! مستشعر اللمس يكتشف عندما يصطدم الروبوت بشيء.", bad: "تقريباً! مستشعر اللمس يعرف عندما يصطدم الروبوت بشيء." },
+    { q: "أيّ جزء يخبر محرّكات الروبوت بما يجب فعله؟", opts: ["العجلات", "البطارية", "الدماغ (الشريحة)", "الهوائي"], ans: 2, ok: "🧠 نعم! الدماغ يقرأ المعلومات ويأمر المحرّكات!", bad: "تقريباً! إنه الدماغ (الشريحة) الذي يأمر المحرّكات." },
+    { q: "ما الحلقة التي تُكررها الروبوتات ملايين المرات في الثانية؟", opts: ["أكل ← نوم ← لعب", "إحساس ← تفكير ← فعل", "جري ← قفز ← توقف", "بيب ← بوب ← بيب"], ans: 1, ok: "🔄 رائع! الإحساس ← التفكير ← الفعل، مراراً وتكراراً!", bad: "ليس تماماً! الحلقة هي: الإحساس ← التفكير ← الفعل." },
+  ]
+};
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let lang = 'en';
+let points = 0;
+let current = 0;
+let animating = false;
+let gamesPlayed = new Set();
+let robotClickCount = 0;
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+
+// ─────────────────────────────────────────
+// LANGUAGE
+// ─────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  document.body.classList.toggle('rtl', l === 'ar');
+  document.querySelectorAll('.lang-opt').forEach(b => b.classList.toggle('active', b.dataset.lang === l));
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const t = T[lang];
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const k = el.dataset.key;
+    if (t[k] !== undefined) el.innerHTML = t[k];
+  });
+  // Update page indicator
+  document.getElementById('pageIndicator').textContent = `${current + 1} / ${totalSlides}`;
+  // Update final score
+  document.getElementById('finalScoreVal').textContent = points;
+  // Update pts label
+  document.getElementById('pointsLabel').textContent = t.pts || 'pts';
+}
+
+// ─────────────────────────────────────────
+// POINTS
+// ─────────────────────────────────────────
+function addPoints(n, x, y) {
+  points += n;
+  document.getElementById('finalScoreVal').textContent = points;
+  const pv = document.getElementById('pointsValue');
+  pv.textContent = points;
+  pv.classList.remove('pop');
+  void pv.offsetWidth;
+  pv.classList.add('pop');
+  setTimeout(() => pv.classList.remove('pop'), 300);
+
+  // Floating +N label
+  const fl = document.createElement('div');
+  fl.className = 'point-float';
+  fl.textContent = `+${n}`;
+  fl.style.left = (x || window.innerWidth / 2) + 'px';
+  fl.style.top  = (y || window.innerHeight / 2) + 'px';
+  document.body.appendChild(fl);
+  setTimeout(() => fl.remove(), 1300);
+}
+
+// ─────────────────────────────────────────
+// ROBOT CLICK GAME (slide 0)
+// ─────────────────────────────────────────
+function clickRobot(svg) {
+  robotClickCount++;
+  svg.classList.remove('wiggle');
+  void svg.offsetWidth;
+  svg.classList.add('wiggle');
+  const pts = robotClickCount <= 5 ? 5 : 2;
+  const rect = svg.getBoundingClientRect();
+  addPoints(pts, rect.left + rect.width / 2, rect.top);
+}
+
+// ─────────────────────────────────────────
+// MINI GAMES
+// ─────────────────────────────────────────
+let activeGame = -1;
+
+function openGame(idx) {
+  if (gamesPlayed.has(idx)) {
+    // Already played — still let them replay but no points
+    showGame(idx, true);
+  } else {
+    showGame(idx, false);
+  }
+}
+
+function showGame(idx, replay) {
+  activeGame = idx;
+  const g = GAMES[lang][idx];
+  const overlay = document.getElementById('mgOverlay');
+  const t = T[lang];
+  document.getElementById('mgTitle').textContent = replay ? '🔄 Replay' : '🤖 Quick Quiz!';
+  document.getElementById('mgQuestion').textContent = g.q;
+  document.getElementById('mgFeedback').textContent = '';
+  document.getElementById('mgClose').style.display = 'none';
+
+  const optsDiv = document.getElementById('mgOptions');
+  optsDiv.innerHTML = '';
+  g.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'mg-opt';
+    btn.textContent = opt;
+    btn.onclick = () => answerGame(i, idx, replay);
+    optsDiv.appendChild(btn);
+  });
+
+  overlay.classList.add('open');
+}
+
+function answerGame(chosen, idx, replay) {
+  const g = GAMES[lang][idx];
+  const optsDiv = document.getElementById('mgOptions');
+  const buttons = optsDiv.querySelectorAll('.mg-opt');
+
+  buttons.forEach(b => { b.disabled = true; });
+  buttons[g.ans].classList.add('reveal');
+
+  if (chosen === g.ans) {
+    buttons[chosen].classList.add('correct');
+    document.getElementById('mgFeedback').textContent = g.ok;
+    document.getElementById('mgFeedback').style.color = '#3a9b44';
+    if (!replay && !gamesPlayed.has(idx)) {
+      gamesPlayed.add(idx);
+      addPoints(10, window.innerWidth / 2, window.innerHeight / 2);
+    }
+  } else {
+    buttons[chosen].classList.add('wrong');
+    document.getElementById('mgFeedback').textContent = g.bad;
+    document.getElementById('mgFeedback').style.color = '#d4407a';
+  }
+
+  document.getElementById('mgClose').style.display = 'inline-block';
+  document.getElementById('mgClose').innerHTML = T[lang].mg_close;
+}
+
+function closeGame() {
+  document.getElementById('mgOverlay').classList.remove('open');
+  activeGame = -1;
+}
+
+// Close overlay on background click
+document.getElementById('mgOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeGame();
+});
+
+// ─────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────
+function buildDots() {
+  const dc = document.getElementById('dots');
+  dc.innerHTML = '';
+  for (let i = 0; i < totalSlides; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dc.appendChild(d);
+  }
+}
+
+function updateUI() {
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === totalSlides - 1;
+  document.getElementById('pageIndicator').textContent = `${current + 1} / ${totalSlides}`;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  if (current === totalSlides - 1) {
+    document.getElementById('finalScoreVal').textContent = points;
+  }
+}
+
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= totalSlides || animating) return;
+  // Award points for navigation
+  addPoints(2, window.innerWidth / 2, window.innerHeight - 80);
+  goTo(next, dir);
+}
+
+function goTo(target, dir) {
+  if (target === current || animating) return;
+  animating = true;
+
+  const direction = dir !== undefined ? dir : (target > current ? 1 : -1);
+  const oldSlide = slides[current];
+  const newSlide = slides[target];
+
+  // Always slide left/right — consistent, no jarring direction changes
+  const enterClass = direction > 0 ? 'enter-right' : 'enter-left';
+  const exitClass  = direction > 0 ? 'exit-left'   : 'exit-right';
+
+  newSlide.classList.remove('hidden','active','enter-right','enter-left','exit-left','exit-right');
+  newSlide.classList.add(enterClass);
+  void newSlide.offsetWidth; // force reflow
+
+  oldSlide.classList.remove('active');
+  oldSlide.classList.add(exitClass);
+  newSlide.classList.remove(enterClass);
+  newSlide.classList.add('active');
+
+  current = target;
+  updateUI();
+
+  setTimeout(() => {
+    oldSlide.classList.remove('exit-left','exit-right','exit-up','exit-down');
+    oldSlide.classList.add('hidden');
+    animating = false;
+  }, 600);
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (document.getElementById('mgOverlay').classList.contains('open')) {
+    if (e.key === 'Escape') closeGame();
+    return;
+  }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
+});
+
+// Touch/swipe
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 40) {
+    if (dx < 0) navigate(1);
+    else navigate(-1);
+  }
+}, { passive: true });
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+buildDots();
+updateUI();
+applyTranslations();
+</script>
+</body>
+</html>
